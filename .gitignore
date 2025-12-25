@@ -1,0 +1,8 @@
+bin
+obj
+/statics
+/nuget
+/emsdk
+
+/MonoMod
+/MonoGame

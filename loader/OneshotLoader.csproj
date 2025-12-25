@@ -1,0 +1,127 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+		<ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+		<Nullable>disable</Nullable>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+		<AssemblyName>OneshotLoader</AssemblyName>
+
+		<StartupObject>OneshotLoader</StartupObject>
+
+		<CompressionEnabled>false</CompressionEnabled>
+		<PublishTrimmed>false</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
+
+		<NoWarn>IL2026,IL2045,IL2046,IL2055,IL2057,IL2060,IL2062,IL2065,IL2067,IL2070,IL2072,IL2075,IL2077,IL2080,IL2087,IL2090,IL2091,IL2104,IL2111</NoWarn>
+		<NoWarn>$(NoWarn),SYSLIB0003,SYSLIB0011,CS0169,CS0219,CS0649,CS1998,CS8981,CA2022,CA1416,CS0436,CS0626,NU1701</NoWarn>
+
+		<WasmBuildNative>true</WasmBuildNative>
+		<WasmEnableThreads>true</WasmEnableThreads>
+		<WasmEnableSIMD>true</WasmEnableSIMD>
+		<WasmEnableExceptionHandling>true</WasmEnableExceptionHandling>
+		<WasmEnableWebcil>false</WasmEnableWebcil>
+		<WasmRunWasmOpt>false</WasmRunWasmOpt>
+
+		<WasmBitcodeCompileOptimizationFlag>-O3</WasmBitcodeCompileOptimizationFlag>
+		<WasmNativeStrip>false</WasmNativeStrip>
+		<WasmNativeDebugSymbols>true</WasmNativeDebugSymbols>
+
+		<WebAssemblyEnableStreamingResponse>true</WebAssemblyEnableStreamingResponse>
+
+		<!-- MAXIMUM_MEMORY is 4GiB - 1 wasm page (64kib) -->
+		<EmccExtraLDFlags>-sMIN_WEBGL_VERSION=2 -sWASMFS -sOFFSCREENCANVAS_SUPPORT -sMAXIMUM_MEMORY=4294901760 -sMALLOC=mimalloc -sFULL_ES2 -sEXTRA_EXPORTED_RUNTIME_METHODS=['GL']</EmccExtraLDFlags>
+		<EmccLinkOptimizationFlag>-O3</EmccLinkOptimizationFlag>
+		<EmccCompileOptimizationFlag>-O3</EmccCompileOptimizationFlag>
+		<EmccEnvironment>web,worker</EmccEnvironment>
+
+		<WasmCachePath>$(MSBuildProjectDirectory)\..\emsdk\upstream\emscripten\cache\</WasmCachePath>
+
+		<__OneshotWasmEmscriptenSdkToolsPath>$(MSBuildProjectDirectory)\..\emsdk\upstream\</__OneshotWasmEmscriptenSdkToolsPath>
+		<__OneshotWasmEmscriptenUpstreamBinPath>$(MSBuildProjectDirectory)\..\emsdk\upstream\bin\</__OneshotWasmEmscriptenUpstreamBinPath>
+		<__OneshotWasmEmscriptenUpstreamEmscriptenPath>$(MSBuildProjectDirectory)\..\emsdk\upstream\emscripten\</__OneshotWasmEmscriptenUpstreamEmscriptenPath>
+		<__OneshotWasmEmscriptenNodeToolsPath>$(MSBuildProjectDirectory)\..\emsdk\node\22.16.0_64bit\bin\node</__OneshotWasmEmscriptenNodeToolsPath>
+		<__OneshotWasmWasmClang>$(MSBuildProjectDirectory)\..\emsdk\upstream\emscripten\emcc</__OneshotWasmWasmClang>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<WasmOptConfigurationFlags Include="-O4 -O4 -O4"></WasmOptConfigurationFlags>
+	</ItemGroup>
+
+	<ItemGroup>
+		<NativeFileReference Include="..\statics\libSDL2.a" />
+		<NativeFileReference Include="fmod.a" />
+		<NativeFileReference Include="..\statics\liba.o" />
+		<NativeFileReference Include="..\statics\hot_reload_detour.o" />
+		<NativeFileReference Include="Emscripten.c" />
+		<NativeFileReference Include="fmodpatch.c" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.DesktopGL.csproj" />
+		<ProjectReference Include="..\Steamworks\Steamworks.NET.csproj" />
+
+		<!-- MonoMod -->
+		<ProjectReference Include="..\MonoMod\src\MonoMod.RuntimeDetour\MonoMod.RuntimeDetour.csproj" />
+		<ProjectReference Include="..\MonoMod\src\MonoMod.RuntimeDetour.HookGen\MonoMod.RuntimeDetour.HookGen.csproj" />
+
+		<!-- Patching -->
+		<ProjectReference Include="..\patcher\Oneshot.Wasm.mm.csproj" />
+		<ProjectReference Include="..\MonoMod\src\MonoMod.Patcher\MonoMod.Patcher.csproj" />
+		<ProjectReference Include="..\MonoMod\external\iced.csproj" />
+
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="ini-parser" Version="2.5.2" />
+		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
+	</ItemGroup>
+
+	<Target Name="BeforeBuild">
+		<Exec Command="bash '$(MSBuildProjectDirectory)/../replaceruntime.sh'" />
+		<Message Importance="High" Text="Replaced runtime" />
+	</Target>
+
+	<!--
+	<Target Name="HackMonoPinvokeTable" BeforeTargets="_WasmCompileNativeSourceFiles" DependsOnTargets="_GenerateManagedToNative">
+		<Exec Command="sed -i $(_WasmPInvokeTablePath) -e 's/Oneshot_Wasm_mm/Oneshot/g' -e 's/Oneshot.Wasm.mm/Oneshot/g'" />
+		<Message Importance="High" Text="PInvoke table hacked" />
+	</Target>
+	-->
+
+	<!-- do not touch unless you like debugging -->
+	<Target Name="ChangeClang" DependsOnTargets="_InitializeCommonProperties" BeforeTargets="_SetupEmscripten">
+		<PropertyGroup>
+			<EmscriptenSdkToolsPath>$(__OneshotWasmEmscriptenSdkToolsPath)</EmscriptenSdkToolsPath>
+			<EmscriptenUpstreamBinPath>$(__OneshotWasmEmscriptenUpstreamBinPath)</EmscriptenUpstreamBinPath>
+			<EmscriptenUpstreamEmscriptenPath>$(__OneshotWasmEmscriptenUpstreamEmscriptenPath)</EmscriptenUpstreamEmscriptenPath>
+			<EmscriptenNodeToolsPath>$(__OneshotWasmEmscriptenNodeToolsPath)</EmscriptenNodeToolsPath>
+			<WasmClang>$(__OneshotWasmWasmClang)</WasmClang>
+		</PropertyGroup>
+		<ItemGroup>
+			<EmscriptenPrependPATH Remove="/usr/share/dotnet/packs/*" />
+			<EmscriptenPrependPATH Include="$(EmscriptenSdkToolsPath)" />
+			<EmscriptenPrependPATH Include="$(EmscriptenUpstreamBinPath)" />
+			<EmscriptenPrependPATH Include="$([MSBuild]::NormalizeDirectory($(EmscriptenSdkToolsPath), 'emscripten'))" />
+			<EmscriptenPrependPATH Include="$(EmscriptenNodeToolsPath)" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="ChangeClang2" DependsOnTargets="_GenerateManagedToNative" BeforeTargets="_WasmCompileNativeSourceFiles">
+		<PropertyGroup>
+			<EmscriptenSdkToolsPath>$(__OneshotWasmEmscriptenSdkToolsPath)</EmscriptenSdkToolsPath>
+			<EmscriptenUpstreamBinPath>$(__OneshotWasmEmscriptenUpstreamBinPath)</EmscriptenUpstreamBinPath>
+			<EmscriptenUpstreamEmscriptenPath>$(__OneshotWasmEmscriptenUpstreamEmscriptenPath)</EmscriptenUpstreamEmscriptenPath>
+			<EmscriptenNodeToolsPath>$(__OneshotWasmEmscriptenNodeToolsPath)</EmscriptenNodeToolsPath>
+			<WasmClang>$(__OneshotWasmWasmClang)</WasmClang>
+		</PropertyGroup>
+		<ItemGroup>
+			<EmscriptenPrependPATH Remove="/usr/share/dotnet/packs/*" />
+			<EmscriptenPrependPATH Include="$(EmscriptenSdkToolsPath)" />
+			<EmscriptenPrependPATH Include="$(EmscriptenUpstreamBinPath)" />
+			<EmscriptenPrependPATH Include="$([MSBuild]::NormalizeDirectory($(EmscriptenSdkToolsPath), 'emscripten'))" />
+			<EmscriptenPrependPATH Include="$(EmscriptenNodeToolsPath)" />
+			<EmscriptenEnvVars Include="PATH=$(EmscriptenSdkToolsPath):$(EmscriptenUpstreamBinPath):$([MSBuild]::NormalizeDirectory($(EmscriptenSdkToolsPath), 'emscripten')):$(EmscriptenNodeToolsPath):$(PATH)" />
+		</ItemGroup>
+	</Target>
+</Project>

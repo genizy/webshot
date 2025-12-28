@@ -18,7 +18,7 @@ PlayButton.style = css`
 		border: none;
 		border-radius: 50%;
 
-		cursor: cancel;
+		cursor: not-allowed;
 
 		--led-color: var(--play-led-not-ready);
 
@@ -33,10 +33,12 @@ PlayButton.style = css`
 	}
 
 	:scope.ready {
+		cursor: auto;
 		--led-color: var(--play-led-ready);
 	}
 
 	:scope:disabled {
+		cursor: not-allowed;
 		--led-color: var(--play-button);
 	}
 `;
@@ -49,7 +51,7 @@ export let GameView: Component<{ preinit: Delegate<void> }> = function (cx) {
 	return (
 		<div>
 			<div class="screen">
-				<canvas id="canvas" class="canvas" />
+				<canvas id="canvas" class="canvas" on:contextmenu={(e: Event) => e.preventDefault()} />
 			</div>
 			<div class="buttons">
 				<PlayButton />
@@ -84,6 +86,7 @@ GameView.style = css`
 	canvas {
 		height: min(calc(calc(100vw - 2rem) * 9 / 16), calc(100vh - 6rem));
 		aspect-ratio: 16 / 9;
+		cursor: none;
 	}
 
 	.buttons {

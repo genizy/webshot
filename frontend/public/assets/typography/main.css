@@ -1,0 +1,37 @@
+@font-face {
+    font-family: "TerminusTTF";
+    src: url(/assets/typography/TerminusTTF-4.49.3.eot);
+    src: url("/assets/typography/TerminusTTF-Bold-4.49.3.woff2") format("woff2"),
+        url("/assets/typography/TerminusTTF-Bold-4.49.3.woff") format("woff"),
+        url("/assets/typography/TerminusTTF-Bold-4.49.3.ttf") format("truetype");
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: "TerminusTTF";
+    src: url(/assets/typography/TerminusTTF-4.49.3.eot);
+    src: url("/assets/typography/TerminusTTF-4.49.3.woff2") format("woff2"),
+        url("/assets/typography/TerminusTTF-4.49.3.woff") format("woff"),
+        url("/assets/typography/TerminusTTF-4.49.3.ttf") format("truetype");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "TerminusTTF";
+    src: url(/assets/typography/TerminusTTF-Italic-4.49.3.eot);
+    src: url("/assets/typography/TerminusTTF-Italic-4.49.3.woff2") format("woff2"),
+        url("/assets/typography/TerminusTTF-Italic-4.49.3.woff") format("woff"),
+        url("/assets/typography/TerminusTTF-Italic-4.49.3.ttf") format("truetype");
+    font-style: italic;
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "TerminusTTF";
+    src: url(/assets/typography/TerminusTTF-BoldItalic-4.49.3.eot);
+    src: url("/assets/typography/TerminusTTF-BoldItalic-4.49.3.woff2") format("woff2"),
+        url("/assets/typography/TerminusTTF-BoldItalic-4.49.3.woff") format("woff"),
+        url("/assets/typography/TerminusTTF-BoldItalic-4.49.3.ttf") format("truetype");
+    font-style: italic;
+    font-weight: bold;
+}

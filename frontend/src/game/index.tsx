@@ -1,15 +1,14 @@
 import { Component, css, Delegate } from "dreamland/core";
 import { gameState, patch, preInit, run } from "./dotnet";
-import { copyGame, wasGameCopied, wasPatched, setSourceFolder, hasSourceFolder, getSourceFolder, verifyGameFolder } from "./fs";
+import { copyGame, wasGameCopied, wasPatched, setSourceFolder, getSourceFolder, verifyGameFolder } from "./fs";
 import { StickyNote } from "../splash";
 import { settings } from "../store";
 
-type SetupStep = "none" | "no-disk" | "welcome" | "name" | "copying";
+type SetupStep = "none" | "welcome" | "insert-disk" | "copying" | "name";
 
-let NoBootableDevice: Component = function () {
+let InsertDiskScreen: Component = function () {
 	return (
 		<div>
-			<div>No bootable device found</div>
 			<div>Please insert World Machine OS disk.</div>
 			<div>You can obtain the disk through <a href="https://store.steampowered.com/app/2915460/OneShot_World_Machine_Edition/" target="_blank">your local Valve Software location.</a></div>
 		</div>
@@ -67,10 +66,10 @@ let CopyingScreen: Component<{ progress: number, patching: boolean }> = function
 let SetupOverlay: Component<{ step: SetupStep, progress: number, patching: boolean, onWelcomeNext: () => void, onNameNext: () => void }> = function () {
 	return (
 		<div class="setup-overlay">
-			{use(this.step).map(s => s === "no-disk").andThen(<NoBootableDevice />)}
 			{use(this.step).map(s => s === "welcome").andThen(<WelcomeScreen next={this.onWelcomeNext} />)}
-			{use(this.step).map(s => s === "name").andThen(<NameEntryScreen next={this.onNameNext} />)}
+			{use(this.step).map(s => s === "insert-disk").andThen(<InsertDiskScreen />)}
 			{use(this.step).map(s => s === "copying").andThen(<CopyingScreen progress={use(this.progress)} patching={use(this.patching)} />)}
+			{use(this.step).map(s => s === "name").andThen(<NameEntryScreen next={this.onNameNext} />)}
 		</div>
 	)
 }
@@ -269,30 +268,14 @@ export let GameView: Component<{ preinit: Delegate<void> }, { setupStep: SetupSt
 			return;
 		}
 		setSourceFolder(folder);
-	};
 
-	let handlePower = async () => {
-		// If already set up, just run
-		if (gameState.assetsReady && settings.name) {
-			run();
-			return;
+		// If we're waiting for disk insertion, start copying
+		if (this.setupStep === "insert-disk") {
+			await startCopying();
 		}
-
-		// No disk inserted
-		if (!hasSourceFolder()) {
-			this.setupStep = "no-disk";
-			return;
-		}
-
-		// Start setup flow
-		this.setupStep = "welcome";
 	};
 
-	let onWelcomeNext = () => {
-		this.setupStep = "name";
-	};
-
-	let onNameNext = async () => {
+	let startCopying = async () => {
 		this.setupStep = "copying";
 		this.copyProgress = 0;
 
@@ -312,8 +295,26 @@ export let GameView: Component<{ preinit: Delegate<void> }, { setupStep: SetupSt
 		gameState.assetsReady = await wasGameCopied() && await wasPatched();
 
 		this.patching = false;
-		this.setupStep = "none";
+		this.setupStep = "name";
+	};
 
+	let handlePower = async () => {
+		// If already set up, just run
+		if (gameState.assetsReady && settings.name) {
+			run();
+			return;
+		}
+
+		// Start setup flow with welcome
+		this.setupStep = "welcome";
+	};
+
+	let onWelcomeNext = () => {
+		this.setupStep = "insert-disk";
+	};
+
+	let onNameNext = async () => {
+		this.setupStep = "none";
 		// Start the game after setup completes
 		run();
 	};

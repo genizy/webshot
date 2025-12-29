@@ -4,7 +4,9 @@ import "./index.css"
 
 let App: Component = function () {
 	let preinit = createDelegate<void>();
-	preinit();
+
+	// Defer preinit() to after mount so GameView can attach its listener
+	setTimeout(() => preinit(), 0);
 
 	return (
 		<div id="app">

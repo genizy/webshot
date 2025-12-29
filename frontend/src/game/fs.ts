@@ -2,6 +2,21 @@ import { gameState } from "./dotnet";
 
 export const rootFolder = await navigator.storage.getDirectory();
 
+let sourceFolder: FileSystemDirectoryHandle | null = null;
+
+export function setSourceFolder(folder: FileSystemDirectoryHandle) {
+	sourceFolder = folder;
+	gameState.diskInserted = true;
+}
+
+export function getSourceFolder(): FileSystemDirectoryHandle | null {
+	return sourceFolder;
+}
+
+export function hasSourceFolder(): boolean {
+	return sourceFolder !== null;
+}
+
 export async function copyFile(
 	file: FileSystemFileHandle,
 	to: FileSystemDirectoryHandle

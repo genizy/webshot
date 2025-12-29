@@ -1,11 +1,92 @@
 import { Component, css, Delegate } from "dreamland/core";
 import { gameState, patch, preInit, run } from "./dotnet";
-import { copyGame, wasGameCopied, wasPatched } from "./fs";
+import { copyGame, wasGameCopied, wasPatched, setSourceFolder, hasSourceFolder, getSourceFolder, verifyGameFolder } from "./fs";
 import { StickyNoteMinimal } from "../splash";
+import { settings } from "../store";
 
-let PlayButton: Component = function () {
+type SetupStep = "none" | "no-disk" | "welcome" | "name" | "copying";
+
+let NoBootableDevice: Component = function () {
 	return (
-		<button on:click={run} disabled={use(gameState.playing)} class:ready={use(gameState.ready, gameState.assetsReady).map(([a, b]) => a && b)}>
+		<div>
+			<div>No bootable device found</div>
+			<div>Please insert World Machine OS disk</div>
+		</div>
+	)
+}
+
+let WelcomeScreen: Component<{ next: () => void }> = function () {
+	return (
+		<div>
+			<div>Welcome to World Machine</div>
+			<button on:click={this.next}>Continue</button>
+		</div>
+	)
+}
+
+let NameEntryScreen: Component<{ next: () => void }, { nameInput: string }> = function () {
+	this.nameInput = "";
+
+	let submit = () => {
+		if (this.nameInput.trim()) {
+			settings.name = this.nameInput.trim();
+			this.next();
+		}
+	};
+
+	return (
+		<div>
+			<div>Enter the name of this machine's owner:</div>
+			<input 
+				placeholder="Your name..." 
+				value={use(this.nameInput)}
+				on:keydown={(e: KeyboardEvent) => e.key === "Enter" && submit()}
+			/>
+			<button on:click={submit} disabled={use(this.nameInput).map(n => !n.trim())}>
+				Continue
+			</button>
+		</div>
+	)
+}
+
+let CopyingScreen: Component<{ progress: number, patching: boolean }> = function () {
+	return (
+		<div class="copying-overlay">
+			<div>Installing World Machine</div>
+			<div class="progress">
+				<div class="progress-inner">
+					<div class="bar" class:patching={use(this.patching)} style={{ "--progress": use(this.progress) }} />
+				</div>
+			</div>
+			<div class="tiny">Do not close the tab</div>
+		</div>
+	)
+}
+
+let SetupOverlay: Component<{ step: SetupStep, progress: number, patching: boolean, onWelcomeNext: () => void, onNameNext: () => void }> = function () {
+	return (
+		<div class="setup-overlay">
+			{use(this.step).map(s => s === "no-disk").andThen(<NoBootableDevice />)}
+			{use(this.step).map(s => s === "welcome").andThen(<WelcomeScreen next={this.onWelcomeNext} />)}
+			{use(this.step).map(s => s === "name").andThen(<NameEntryScreen next={this.onNameNext} />)}
+			{use(this.step).map(s => s === "copying").andThen(<CopyingScreen progress={use(this.progress)} patching={use(this.patching)} />)}
+		</div>
+	)
+}
+SetupOverlay.style = css`
+	:scope {
+		background: #000;
+		color: var(--oneshot);
+		width: 100%;
+		height: 100%;
+		padding: 1rem;
+		font-size: 1.25rem;
+	}
+`;
+
+let PlayButton: Component<{ onPower: () => void }> = function () {
+	return (
+		<button on:click={this.onPower} disabled={use(gameState.playing)} class:ready={use(gameState.ready).map(r => r)}>
 			<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentcolor">
 				<path d="M480-46q-91 0-169.99-34.08-78.98-34.09-137.41-92.52-58.43-58.43-92.52-137.41Q46-389 46-480q0-91.34 33.5-170.17Q113-729 172-788l90 89q-42 42-66 98.17t-24 121.06Q172-350 261-261t219 89q130 0 219-89t89-218.77q0-64.89-23.5-121.06T699-699l89-89q59 59 92.5 137.83Q914-571.34 914-480q0 91-34.08 169.99-34.09 78.98-92.52 137.41-58.43 58.43-137.41 92.52Q571-46 480-46Zm-63-371v-497h126v497H417Z" />
 			</svg>
@@ -45,11 +126,11 @@ PlayButton.style = css`
 	}
 `;
 
-let CopyAssetsSlot: Component<{ copy: () => void }> = function () {
+let CopyAssetsSlot: Component<{ insertDisk: () => void }> = function () {
 	return (
-		<button on:click={this.copy} disabled={use(gameState.playing)}>
+		<button on:click={this.insertDisk} disabled={use(gameState.playing)}>
 			World Machine OS
-			<div class="led" class:blinking={use(gameState.assetsReady).map(x => !x)} />
+			<div class="led" class:blinking={use(gameState.diskInserted).map(x => !x)} />
 		</button>
 	)
 }
@@ -119,22 +200,55 @@ StickyNoteButton.style = css`
 	}
 `;
 
-export let GameView: Component<{ preinit: Delegate<void>, showSplash: boolean, }, { settingUp: boolean, copyProgress: number, patching: boolean }> = function () {
+export let GameView: Component<{ preinit: Delegate<void>, showSplash: boolean, }, { setupStep: SetupStep, copyProgress: number, patching: boolean }> = function () {
 	this.preinit.listen(async () => {
 		await preInit();
 	})
-	this.settingUp = false;
+	this.setupStep = "none";
 	this.copyProgress = 0;
 	this.patching = false;
 
-	let copy = async () => {
+	let insertDisk = async () => {
 		let folder = await showDirectoryPicker();
+		if (!await verifyGameFolder(folder)) {
+			alert("Invalid game folder");
+			return;
+		}
+		setSourceFolder(folder);
+	};
 
-		this.settingUp = true;
+	let handlePower = async () => {
+		// If already set up, just run
+		if (gameState.assetsReady && settings.name) {
+			run();
+			return;
+		}
+
+		// No disk inserted
+		if (!hasSourceFolder()) {
+			this.setupStep = "no-disk";
+			return;
+		}
+
+		// Start setup flow
+		this.setupStep = "welcome";
+	};
+
+	let onWelcomeNext = () => {
+		this.setupStep = "name";
+	};
+
+	let onNameNext = async () => {
+		this.setupStep = "copying";
+		this.copyProgress = 0;
+
+		let folder = getSourceFolder()!;
 		try {
 			await copyGame(folder, x => this.copyProgress = x);
 		} catch (err) {
-			alert("There was an error while bootstrapping: " + (err as any).message);
+			alert("There was an error while copying: " + (err as any).message);
+			this.setupStep = "none";
+			return;
 		}
 
 		this.patching = true;
@@ -143,33 +257,34 @@ export let GameView: Component<{ preinit: Delegate<void>, showSplash: boolean, }
 
 		gameState.assetsReady = await wasGameCopied() && await wasPatched();
 
-		this.settingUp = false;
 		this.patching = false;
+		this.setupStep = "none";
+
+		// Start the game after setup completes
+		run();
 	};
 
 	return (
 		<div>
 			<div class="screen">
+				{use(this.setupStep).map(s => s !== "none").andThen(
+					<SetupOverlay 
+						step={use(this.setupStep)} 
+						progress={use(this.copyProgress)} 
+						patching={use(this.patching)}
+						onWelcomeNext={onWelcomeNext}
+						onNameNext={onNameNext}
+					/>
+				)}
 				<div class="canvas-wrapper" on:contextmenu={(e: Event) => e.preventDefault()}>
-					{use(this.settingUp).andThen(
-						<div class="copying-overlay">
-							<div>MACHINE BOOTSTRAPPING</div>
-							<div class="progress">
-								<div class="progress-inner">
-									<div class="bar" class:patching={use(this.patching)} style={{ "--progress": use(this.copyProgress) }} />
-								</div>
-							</div>
-							<div class="tiny">Do not close the tab</div>
-						</div>
-					)}
 					<canvas id="canvas" class="canvas" />
 				</div>
 			</div>
 			<div class="buttons">
-				<CopyAssetsSlot copy={copy} />
-				<StickyNoteButton open={() =>this.showSplash = true}/>
+				<CopyAssetsSlot insertDisk={insertDisk} />
+				<StickyNoteButton open={() => this.showSplash = true}/>
 				<div class="expand" />
-				<PlayButton />
+				<PlayButton onPower={handlePower} />
 			</div>
 		</div>
 	)

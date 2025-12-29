@@ -8,11 +8,13 @@ export type Log = { color: string; log: string };
 export const gameState: Stateful<{
 	ready: boolean;
 	assetsReady: boolean;
+	diskInserted: boolean;
 	initting: boolean;
 	playing: boolean;
 }> = createState({
 	ready: false,
 	assetsReady: false,
+	diskInserted: false,
 	initting: false,
 	playing: false,
 });

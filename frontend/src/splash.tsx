@@ -38,12 +38,9 @@ export let StickyNote: Component<{ done: () => void }> = function () {
 				You will need to own the game and have it downloaded to play this port. The source is available on <a href={GITHUB} target="_blank">GitHub</a>.
 			</p>
 			<p>
-				Get started by typing in your name.
+				Machine Owned By: {use(settings.name)}
 			</p>
-			<p>
-				Machine Owned By: <input value={use(settings.name)} placeholder="Player" />
-			</p>
-			<div class="exit"><button on:click={this.done}><span>[</span> SAVE <span>]</span></button></div>
+			<div class="exit"><button on:click={this.done}><span>[</span> CLOSE <span>]</span></button></div>
 		</div>
 	)
 }
@@ -90,11 +87,5 @@ StickyNote.style = css`
 	}
 	button:hover span {
 		visibility: visible;
-	}
-
-	p:has(> input:placeholder-shown) + .exit { visibility: hidden; }
-
-	.expand {
-		height: 3rem;
 	}
 `;

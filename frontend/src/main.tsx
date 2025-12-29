@@ -1,30 +1,21 @@
 import { Component, createDelegate, css } from "dreamland/core";
 import { GameView } from "./game";
 import { StickyNote } from "./splash";
-import { settings } from "./store";
 
 let App: Component<{}, { showSplash: boolean }> = function () {
 	let preinit = createDelegate<void>();
 
-	let firstSplash = true;
-
-	let init = () => {
-		if (firstSplash) preinit();
-		firstSplash = false;
-		this.showSplash = false;
-	};
-
-	this.showSplash = settings.name === "";
-	if (!this.showSplash) init();
+	this.showSplash = false;
+	preinit();
 
 	return (
 		<div id="app">
 			{use(this.showSplash).andThen(
 				<div class="splash">
-					<StickyNote done={init} />
+					<StickyNote done={() => this.showSplash = false} />
 				</div>
 			)}
-			<GameView preinit={preinit} showSplash={use(this.showSplash)} />;
+			<GameView preinit={preinit} showSplash={use(this.showSplash)} />
 		</div>
 	)
 }

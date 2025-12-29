@@ -13,6 +13,17 @@ a, a:visited, a:hover { color: var(--oneshot); }
     --sticky-note: #ffea97;
     --font-body: "TerminusTTF", monospace;
     --font-script: 'Comic Neue', 'Comic Sans MS', cursive, sans-serif;
+
+    accent-color: var(--oneshot);
+}
+ ::selection {
+    background: color-mix(in srgb, var(--oneshot) 40%, transparent);
+
+}
+
+.setup-screen ::selection {
+    background: var(--oneshot);
+    color: black;
 }
 
 input,
@@ -44,6 +55,31 @@ body {
     padding: 0.5rem 1.5rem;
     font-size: 1.25rem;
     cursor: pointer;
+}
+
+.name-input {
+    border: 4px double var(--oneshot);
+    background: transparent;
+    color: var(--oneshot);
+    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    appearance: none;
+}
+
+.name-input:focus-visible {
+    outline: none;
+    border-color: color-mix(in oklab, var(--oneshot) 80%, white 20%);
+}
+
+b {
+    color: color-mix(in oklab, var(--oneshot) 80%, white 25%);
+}
+
+::placeholder {
+    color: var(--oneshot);
+    opacity: 0.6;
 }
 
 .setup-button:hover {

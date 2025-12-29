@@ -13,7 +13,7 @@ let InsertDiskScreen: Component = function () {
 			<div class="setup-content">
 				<p>Please insert the World Machine OS disk into Drive A:</p>
 			</div>
-			<GenericFooter />
+			<GenericFooter status="Waiting for disk" />
 		</div>
 	)
 }
@@ -120,16 +120,21 @@ let NameEntryScreen: Component<{ next: () => void }, { nameInput: string }> = fu
 		<div class="setup-screen">
 			<Header text="World Machine Setup" />
 			<div class="setup-content">
-			<div>Enter the name of this machine's owner:</div>
+			<b>Owner Registration</b>
+			<br />
+			<p>Enter the first name of this machine's owner:</p>
 			<input 
+				class="name-input"
 				placeholder="Your name..." 
 				value={use(this.nameInput)}
 				on:keydown={(e: KeyboardEvent) => e.key === "Enter" && submit()}
 			/>
-			<button on:click={submit} disabled={use(this.nameInput).map(n => !n.trim())}>
+			<br /><br />
+			<button class="setup-button" on:click={submit} disabled={use(this.nameInput).map(n => !n.trim())}>
 				Continue
 			</button>
 			</div>
+			<GenericFooter status="" />
 		</div>
 	)
 }
@@ -439,7 +444,9 @@ export let GameView: Component<{ preinit: Delegate<void> }, { setupStep: SetupSt
 		gameState.assetsReady = await wasGameCopied() && await wasPatched();
 
 		this.patching = false;
-		this.setupStep = "name";
+		this.setupStep = "none";
+		// Start the game after setup completes
+		run();
 	};
 
 	let handlePower = async () => {
@@ -454,13 +461,11 @@ export let GameView: Component<{ preinit: Delegate<void> }, { setupStep: SetupSt
 	};
 
 	let onWelcomeNext = () => {
-		this.setupStep = "insert-disk";
+		this.setupStep = "name";
 	};
 
 	let onNameNext = async () => {
-		this.setupStep = "none";
-		// Start the game after setup completes
-		run();
+		this.setupStep = "insert-disk";
 	};
 
 	return (

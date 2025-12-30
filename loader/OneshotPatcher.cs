@@ -68,9 +68,13 @@ public partial class OneshotPatcher
         {
             modder.Log($"Patching {path}");
         });
-
-		var winFormsRef = target.AssemblyReferences.First(r => r.Name == "System.Windows.Forms");
-		target.AssemblyReferences.Remove(winFormsRef);
+        
+        try {
+            var winFormsRef = target.AssemblyReferences.First(r => r.Name == "System.Windows.Forms");
+            target.AssemblyReferences.Remove(winFormsRef);
+        } catch(InvalidOperationException) {
+            Console.WriteLine("winforms references not found, skipping since this is probably not a windows build");
+        }
 
         target.Write(output, new WriterParameters() { WriteSymbols = false });
     }

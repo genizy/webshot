@@ -57,6 +57,20 @@ body {
     cursor: pointer;
 }
 
+.setup-button:disabled {
+    filter: grayscale(20%) opacity(70%) saturate(70%);
+    cursor: not-allowed;
+}
+
+.setup-button:not(:disabled):hover {
+    background: var(--oneshot);
+    color: black;
+}
+
+.setup-button:not(:disabled):active {
+    border-color: black ;
+}
+
 .name-input {
     border: 4px double var(--oneshot);
     background: transparent;
@@ -80,13 +94,4 @@ b {
 ::placeholder {
     color: var(--oneshot);
     opacity: 0.6;
-}
-
-.setup-button:hover {
-    background: var(--oneshot);
-    color: black;
-}
-
-.setup-button:active {
-    border-color: black ;
 }

@@ -14,7 +14,7 @@ export let StickyNote: Component<{ done: () => void }> = function () {
 		<div>
 			<div class="headline">WebShot – README</div>
 			<p class="info">
-				Machine Owned By: <span style="font-family: var(--font-script); font-style: italic;">{use(settings.name)}</span>
+				Machine Owned By:<input type="text" value={use(settings.name)} style="font-family: var(--font-script); font-style: italic;" />
 			</p>
 			<p>
 				This is a port of OneShot: World Machine Edition to the browser using dotnet and FNA's threaded WebAssembly support.
@@ -41,12 +41,12 @@ StickyNote.style = css`
 
 	.headline {
 		font-size: 1.6rem;
-		text-align: center;
+		/* text-align: center; */
 		/* margin-bottom: .5rem; */
 	}
 
 	.info {
-		margin-bottom: 2.5rem;
+		margin-bottom: .5rem;
 		margin-top: .5rem;
 	}
 
@@ -59,7 +59,7 @@ StickyNote.style = css`
 	}
 
 	input {
-		border-bottom: 2px solid #000;
+		border: none;
 	}
 
 	.exit {

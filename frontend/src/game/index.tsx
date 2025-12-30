@@ -114,6 +114,12 @@ let NameEntryScreen: Component<{ next: () => void }, { nameInput: string }> = fu
 			settings.name = this.nameInput.trim();
 			this.next();
 		}
+
+		// surface sticky note control
+		document.querySelector("#sticky-note-widget")?.classList.add("hint");
+		setTimeout(() => {
+			document.querySelector("#sticky-note-widget")?.classList.remove("hint");
+		}, 1400);
 	};
 
 	return (
@@ -339,7 +345,7 @@ let StickyNoteWidget: Component<{}, { expanded: boolean }> = function () {
 	};
 
 	return (
-		<div class:expanded={use(this.expanded)}>
+		<div class:expanded={use(this.expanded)} id="sticky-note-widget" class="sticky-note-widget">
 			<div class="placeholder" />
 			<div class="backdrop" on:click={() => this.expanded = false} />
 			<div class="sticky-note" on:click={() => this.expanded = !this.expanded}>
@@ -383,18 +389,22 @@ StickyNoteWidget.style = css`
 	.sticky-note {
 		position: fixed;
 		bottom: 1rem;
-		left: 18rem;
+		left: 19rem;
 		width: 30rem;
 		height: 30rem;
 		cursor: pointer;
-		transform: rotate(-2deg) translateY(calc(100% - 3.5rem));
+		transform: rotate(2deg) translateY(calc(100% - 2.75rem));
 		transform-origin: top right;
-		transition: transform 0.4s, bottom 0.4s, right 0.4s;
+		transition: transform 0.4s, bottom 0.4s, left 0.4s;
 		z-index: 100;
 	}
 
 	:scope:hover:not(.expanded) .sticky-note {
 		transform: rotate(0deg) translateY(calc(100% - 5rem));
+	}
+
+	:scope.hint:not(.expanded) .sticky-note {
+		transform: rotate(0deg) translateY(calc(100% - 7rem));
 	}
 
 	.sticky-note > * {
@@ -404,8 +414,8 @@ StickyNoteWidget.style = css`
 
 	:scope.expanded .sticky-note {
 		bottom: 50%;
-		right: 50%;
-		transform: rotate(0deg) translate(50%, 50%);
+		left: 50%;
+		transform: rotate(0deg) translate(-50%, 50%);
 	}
 `;
 

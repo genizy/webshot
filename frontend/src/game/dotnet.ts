@@ -8,11 +8,13 @@ export type Log = { color: string; log: string };
 export const gameState: Stateful<{
 	ready: boolean;
 	assetsReady: boolean;
+	diskInserted: boolean;
 	initting: boolean;
 	playing: boolean;
 }> = createState({
 	ready: false,
 	assetsReady: false,
+	diskInserted: false,
 	initting: false,
 	playing: false,
 });
@@ -54,6 +56,7 @@ function getDlls(): (readonly [string, string])[] {
 }
 
 export async function preInit() {
+	console.log("preinit")
 	if (gameState.ready) return;
 
 	let url = "../_framework/dotnet.js";
@@ -89,6 +92,7 @@ export async function preInit() {
 
 	const config = runtime.getConfig();
 	exports = await runtime.getAssemblyExports(config.mainAssemblyName!);
+	console.log(exports);
 
 	runtime.setModuleImports("SteamJS", SteamJS);
 
@@ -113,6 +117,7 @@ export async function preInit() {
 }
 
 export async function patch() {
+	console.log(exports);
 	await exports.OneshotPatcher.Patch();
 }
 

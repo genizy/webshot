@@ -41,6 +41,8 @@ deps: statics MonoGame MonoMod emsdk frontend/node_modules
 
 build: deps
 	rm -r frontend/public/_framework loader/bin/Release/net10.0/publish/wwwroot/_framework || true
+	# clean iced obj dirs to prevent duplicate assembly attribute errors
+	rm -rf MonoMod/external/iced/src/csharp/Intel/Iced/obj MonoMod/artifacts/obj/iced || true
 #
 	NUGET_PACKAGES="$(shell realpath .)/nuget" dotnet restore loader $(DOTNETFLAGS)
 	bash replaceruntime.sh

@@ -3,15 +3,7 @@ import { StickyNote } from "../../splash";
 
 export let StickyNoteWidget: Component<{}, { expanded: boolean }> = function () {
 	this.expanded = false;
-
-	let handleNoteClick = (e: Event) => {
-		if (this.expanded) {
-			e.stopPropagation();
-		} else {
-			this.expanded = true;
-		}
-	};
-
+	
 	return (
 		<div class:expanded={use(this.expanded)} id="sticky-note-widget" class="sticky-note-widget">
 			<div class="placeholder" />

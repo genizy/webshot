@@ -45,10 +45,8 @@ deps: statics MonoGame MonoMod emsdk frontend/node_modules
 build: deps
 	rm -rf frontend/public/_framework loader/bin/Release/net10.0/publish/wwwroot/_framework || true
 
-	# Prevent iced duplicate assembly attributes
 	rm -rf MonoMod/external/iced/src/csharp/Intel/Iced/obj MonoMod/artifacts/obj/iced || true
 
-	# Restore + publish (single-threaded)
 	NUGET_PACKAGES="$(shell realpath .)/nuget" \
 	$(DOTNET_ENV) \
 	dotnet restore loader $(DOTNETFLAGS)
@@ -60,9 +58,6 @@ build: deps
 	dotnet publish loader -c Release $(DOTNETFLAGS)
 
 	cp -r loader/bin/Release/net10.0/publish/wwwroot/_framework frontend/public/
-
-	# --- REMOVE ALL THREADED PATCHES ---
-	# (No OffscreenCanvas, no runMainThreadEmAsm, no canvas transfer hacks)
 
 serve: build
 	cd frontend && pnpm dev

@@ -1,4 +1,4 @@
-STATICS_RELEASE=7ad64c04-3e1e-4daf-b717-c6c662a2eb66
+STATICS_RELEASE=7739ff86-4795-48fb-8ec6-40a1b3c64e4e
 
 DOTNETFLAGS=--nodereuse:false -v n
 DOTNET_ENV=DOTNET_EnableThreads=false
@@ -11,10 +11,10 @@ endif
 
 statics:
 	mkdir -p statics
-	wget https://github.com/r58Playz/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/SDL2.a -O statics/libSDL2.a
-	wget https://github.com/r58Playz/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/liba.o -O statics/liba.o
-	wget https://github.com/r58Playz/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/hot_reload_detour.o -O statics/hot_reload_detour.o
-	wget https://github.com/r58Playz/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/dotnet.zip -O statics/dotnet.zip
+	wget https://github.com/genizy/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/SDL2.a -O statics/libSDL2.a
+	wget https://github.com/genizy/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/liba.o -O statics/liba.o
+	wget https://github.com/genizy/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/hot_reload_detour.o -O statics/hot_reload_detour.o
+	wget https://github.com/genizy/FNA-WASM-Build/releases/download/$(STATICS_RELEASE)/dotnet.zip -O statics/dotnet.zip
 
 MonoGame:
 	git clone https://github.com/r58Playz/MonoGame --recursive -b oneshot
